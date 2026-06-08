@@ -8,12 +8,26 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"context"
+	"github.com/jackc/pgx/v5"
 )
 
 func main() {
 	fmt.Println(" ###### TUI DIARY ###### ")
 	fmt.Println("Welcome!")
 	printHelp()
+
+	conn, err := connect()
+	if err != nil {
+		fmt.Println("Error connecting to database:", err)
+		os.Exit(1)
+	}
+	defer conn.Close(context.Background())
+
+	if err := setupDB(conn); err != nil {
+		fmt.Println("Error setting up database:", err)
+		os.Exit(1)
+	}
 
 	// channel for receiving operating system signals, with a buffer size of one item
 	sigChan := make(chan os.Signal, 1)
@@ -36,7 +50,7 @@ func main() {
 			fmt.Println("\nBye!")
 			return
 		case input := <-inputChan:
-			handleCommand(input, inputChan)
+			handleCommand(input, inputChan, conn)
 			fmt.Print("> ")
 		}
 	}
@@ -52,23 +66,24 @@ func printHelp() {
 	fmt.Println("########################################################")
 }
 
-func handleCommand(input string, inputChan chan string) {
+func handleCommand(input string, inputChan chan string, conn *pgx.Conn) {
 	switch strings.ToLower(input) {
 	case "h", "help":
 		printHelp()
 	case "n", "new":
-		writeNewEntry(inputChan)
+		writeNewEntry(inputChan, conn)
+	case "a", "all":
+		listEntries(conn)
 	default:
-		fmt.Printf("Unknown command: %q. Try: [n]ew\n", input)
+		fmt.Printf("Unknown command: %q. Try something else.", input)
 	}
 }
 
-func writeNewEntry(inputChan chan string) {
+func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 	fmt.Println("--- NEW ENTRY ---")
 	fmt.Println("Write your entry (press Enter twice when done):")
 
 	var lines []string
-
 	for input := range inputChan {
 		if input == "" && len(lines) > 0 {
 			break
@@ -81,7 +96,9 @@ func writeNewEntry(inputChan chan string) {
 		return
 	}
 
-	entry := strings.Join(lines, "\n")
-	fmt.Printf("Entry saved (%d lines)!\n", len(lines))
-	_ = entry
+	if err := saveEntry(conn, strings.Join(lines, "\n")); err != nil {
+		fmt.Println("Error saving entry:", err)
+		return
+	}
+	fmt.Println("Entry saved!")
 }
