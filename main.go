@@ -10,9 +10,15 @@ import (
 	"syscall"
 	"context"
 	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+    if err := godotenv.Load(".env.local"); err != nil {
+        fmt.Println("Warning: no .env file found")
+    }
+
 	fmt.Println(" ###### TUI DIARY ###### ")
 	fmt.Println("Welcome!")
 	printHelp()
@@ -61,6 +67,7 @@ func printHelp() {
 	fmt.Println("# Press Ctrl+C at any time to quit.")
 	fmt.Println("# Commands:")
 	fmt.Println("#  [n]ew - write a new entry")
+	fmt.Println("#  [a]ll - list all of the entries you have made")
 	fmt.Println("#")
 	fmt.Println("# Enter [h]elp to make these instructions reappear!    #")
 	fmt.Println("########################################################")
@@ -75,7 +82,7 @@ func handleCommand(input string, inputChan chan string, conn *pgx.Conn) {
 	case "a", "all":
 		listEntries(conn)
 	default:
-		fmt.Printf("Unknown command: %q. Try something else.", input)
+		fmt.Printf("Unknown command: %q. Try something else.\n", input)
 	}
 }
 

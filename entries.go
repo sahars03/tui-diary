@@ -16,11 +16,14 @@ type Entry struct {
 }
 
 func connect() (*pgx.Conn, error) {
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		return nil, fmt.Errorf("DATABASE_URL environment variable not set")
-	}
-	return pgx.Connect(context.Background(), url)
+    host     := os.Getenv("PGHOST")
+    user     := os.Getenv("PGUSER")
+    password := os.Getenv("PGPASSWORD")
+    dbname   := os.Getenv("PGDATABASE")
+    port     := os.Getenv("PGPORT")
+
+    url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, password, host, port, dbname)
+    return pgx.Connect(context.Background(), url)
 }
 
 func setupDB(conn *pgx.Conn) error {
@@ -67,7 +70,7 @@ func listEntries(conn *pgx.Conn) {
 	}
 
 	if len(entries) == 0 {
-		fmt.Println("No entries yet.")
+		fmt.Println("No entries yet!")
 		return
 	}
 
