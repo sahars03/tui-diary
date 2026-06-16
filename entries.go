@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"time"
-
 	"github.com/jackc/pgx/v5"
 )
 
@@ -46,7 +45,7 @@ func saveEntry(conn *pgx.Conn, contents string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Entry saved as #%d\n", id)
+	fmt.Printf("Entry saved as #%d!\n", id)
 	return nil
 }
 
@@ -60,6 +59,26 @@ func loadEntries(conn *pgx.Conn) ([]Entry, error) {
 	defer rows.Close()
 
 	return pgx.CollectRows(rows, pgx.RowToStructByName[Entry])
+}
+
+func loadOneEntry(conn *pgx.Conn, id int) (Entry, error) {
+	rows, err := conn.Query(context.Background(),
+		`SELECT id, date, contents FROM entries WHERE id = $1`,
+		id,
+	)
+	if err != nil {
+		return Entry{}, err
+	}
+	defer rows.Close()
+
+	entry, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Entry])
+	if err == pgx.ErrNoRows {
+		return Entry{}, fmt.Errorf("no entry found with id #%d", id)
+	}
+	if err != nil {
+		return Entry{}, err
+	}
+	return entry, nil
 }
 
 func listEntries(conn *pgx.Conn) {

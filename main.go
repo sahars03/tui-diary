@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 	"context"
+	"strconv"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 )
@@ -63,11 +64,14 @@ func main() {
 }
 
 func printHelp() {
+	// TODO: change ctrl-c to [q]uit
 	fmt.Println("########################################################")
-	fmt.Println("# Press Ctrl+C at any time to quit.")
+	fmt.Println("# Enter [q]uit at any time to quit.")
 	fmt.Println("# Commands:")
 	fmt.Println("#  [n]ew - write a new entry")
 	fmt.Println("#  [a]ll - list all of the entries you have made")
+	fmt.Println("#  [v]iew - take a look at a specific entry")
+	fmt.Println("#  [c]lear - delete all of your entries")	
 	fmt.Println("#")
 	fmt.Println("# Enter [h]elp to make these instructions reappear!    #")
 	fmt.Println("########################################################")
@@ -81,6 +85,8 @@ func handleCommand(input string, inputChan chan string, conn *pgx.Conn) {
 		writeNewEntry(inputChan, conn)
 	case "a", "all":
 		listEntries(conn)
+	case "v", "view":
+		displayEntry(inputChan, conn)
 	default:
 		fmt.Printf("Unknown command: %q. Try something else.\n", input)
 	}
@@ -107,5 +113,26 @@ func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 		fmt.Println("Error saving entry:", err)
 		return
 	}
-	fmt.Println("Entry saved!")
+}
+
+func displayEntry(inputChan chan string, conn *pgx.Conn) {
+	fmt.Println("Enter the ID of the entry you want to read:")
+
+	input := <-inputChan
+
+	id, err := strconv.Atoi(input)
+	if err != nil {
+		fmt.Println("Invalid ID — please enter a number. Type [v]iew to try again.")
+		return
+	}
+
+	entry, err := loadOneEntry(conn, id)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("--- Entry #%d | %s ---\n", entry.ID, entry.Date.Format("2 Jan 2006 15:04"))
+	fmt.Println(entry.Contents)
+	fmt.Println("---")
 }
