@@ -71,6 +71,7 @@ func printHelp() {
 	fmt.Println("#  [n]ew - write a new entry")
 	fmt.Println("#  [a]ll - list all of the entries you have made")
 	fmt.Println("#  [v]iew - take a look at a specific entry")
+	fmt.Println("#  [d]elete - delete a specific entry")	
 	fmt.Println("#  [c]lear - delete all of your entries")	
 	fmt.Println("#")
 	fmt.Println("# Enter [h]elp to make these instructions reappear!    #")
@@ -87,6 +88,8 @@ func handleCommand(input string, inputChan chan string, conn *pgx.Conn) {
 		listEntries(conn)
 	case "v", "view":
 		displayEntry(inputChan, conn)
+	case "d", "delete":
+		deleteEntry(inputChan, conn)
 	default:
 		fmt.Printf("Unknown command: %q. Try something else.\n", input)
 	}
@@ -135,4 +138,40 @@ func displayEntry(inputChan chan string, conn *pgx.Conn) {
 	fmt.Printf("--- Entry #%d | %s ---\n", entry.ID, entry.Date.Format("2 Jan 2006 15:04"))
 	fmt.Println(entry.Contents)
 	fmt.Println("---")
+}
+
+func deleteEntry(inputChan chan string, conn *pgx.Conn) {
+	fmt.Println("Enter the ID of the entry you want to delete:")
+
+	input := <-inputChan
+
+	id, err := strconv.Atoi(input)
+	if err != nil {
+		fmt.Println("Invalid ID — please enter a number. Type [d]elete to try again.")
+		return
+	}
+
+	entry, err := loadOneEntry(conn, id)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("This is the entry you wish to delete:")
+	fmt.Printf("--- Entry #%d | %s ---\n", entry.ID, entry.Date.Format("2 Jan 2006 15:04"))
+	fmt.Println(entry.Contents)
+	fmt.Println("---")	
+
+	fmt.Println("Are you sure you want to delete this entry? Type [y]es to delete and anything else to cancel")
+
+	input = <-inputChan
+	
+	if strings.ToLower(input) == "y" || strings.ToLower(input) == "yes" {
+		if err := deleteOneEntry(conn, id); err != nil {
+			fmt.Println(err)
+			return
+		}
+	} else {
+		fmt.Println("Entry deletion cancelled.")
+	}
 }

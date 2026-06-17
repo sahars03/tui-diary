@@ -101,3 +101,20 @@ func listEntries(conn *pgx.Conn) {
 		fmt.Printf("#%d  %s\n%s\n\n", e.ID, e.Date.Format("2 Jan 2006 15:04"), preview)
 	}
 }
+
+func deleteOneEntry(conn *pgx.Conn, id int) error {
+	result, err := conn.Exec(context.Background(),
+		`DELETE FROM entries WHERE id = $1`,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no entry found with id #%d", id)
+	}
+
+	fmt.Printf("Entry #%d has been deleted!\n", id)
+	return nil
+}
