@@ -54,31 +54,34 @@ func main() {
 	for {
 		select {
 		case <-sigChan:
-			fmt.Println("\nBye!")
+			fmt.Print("\nBye!")
 			return
 		case input := <-inputChan:
-			handleCommand(input, inputChan, conn)
+			keepGoing := handleCommand(input, inputChan, conn)
+			if !keepGoing {
+				fmt.Print("Bye!")
+				return
+			}
 			fmt.Print("> ")
 		}
 	}
 }
 
 func printHelp() {
-	// TODO: change ctrl-c to [q]uit
 	fmt.Println("########################################################")
-	fmt.Println("# Enter [q]uit at any time to quit.")
 	fmt.Println("# Commands:")
 	fmt.Println("#  [n]ew - write a new entry")
 	fmt.Println("#  [a]ll - list all of the entries you have made")
 	fmt.Println("#  [v]iew - take a look at a specific entry")
 	fmt.Println("#  [d]elete - delete a specific entry")	
 	fmt.Println("#  [c]lear - delete all of your entries")	
+	fmt.Println("#  [q]uit - leave the application")	
 	fmt.Println("#")
 	fmt.Println("# Enter [h]elp to make these instructions reappear!    #")
 	fmt.Println("########################################################")
 }
 
-func handleCommand(input string, inputChan chan string, conn *pgx.Conn) {
+func handleCommand(input string, inputChan chan string, conn *pgx.Conn) bool {
 	switch strings.ToLower(input) {
 	case "h", "help":
 		printHelp()
@@ -92,9 +95,12 @@ func handleCommand(input string, inputChan chan string, conn *pgx.Conn) {
 		deleteEntry(inputChan, conn)
 	case "c", "clear":
 		deleteAllEntries(inputChan, conn)
+	case "q", "quit":
+		return false
 	default:
 		fmt.Printf("Unknown command: %q. Try something else.\n", input)
 	}
+	return true
 }
 
 // TODO: implement cancellation so that when a user does not want to save their entry they cancel writing it
@@ -121,6 +127,7 @@ func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 	}
 }
 
+// TODO: message where if there are no existing entries the user is told that before they start inputting IDs
 func displayEntry(inputChan chan string, conn *pgx.Conn) {
 	fmt.Println("Enter the ID of the entry you want to read:")
 
