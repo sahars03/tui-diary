@@ -118,3 +118,10 @@ func deleteOneEntry(conn *pgx.Conn, id int) error {
 	fmt.Printf("Entry #%d has been deleted!\n", id)
 	return nil
 }
+
+func clearEntries(conn *pgx.Conn) error {
+	_, err := conn.Exec(context.Background(),
+		`DELETE FROM entries`,
+	)
+	return err
+}

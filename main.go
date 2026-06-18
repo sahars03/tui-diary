@@ -90,11 +90,14 @@ func handleCommand(input string, inputChan chan string, conn *pgx.Conn) {
 		displayEntry(inputChan, conn)
 	case "d", "delete":
 		deleteEntry(inputChan, conn)
+	case "c", "clear":
+		deleteAllEntries(inputChan, conn)
 	default:
 		fmt.Printf("Unknown command: %q. Try something else.\n", input)
 	}
 }
 
+// TODO: implement cancellation so that when a user does not want to save their entry they cancel writing it
 func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 	fmt.Println("--- NEW ENTRY ---")
 	fmt.Println("Write your entry (press Enter twice when done):")
@@ -173,5 +176,22 @@ func deleteEntry(inputChan chan string, conn *pgx.Conn) {
 		}
 	} else {
 		fmt.Println("Entry deletion cancelled.")
+	}
+}
+
+func deleteAllEntries(inputChan chan string, conn *pgx.Conn) {
+
+	fmt.Println("Are you sure you want to delete all entries? This cannot be undone.\nType [y]es to delete and anything else to cancel")
+
+	input := <-inputChan
+	
+	if strings.ToLower(input) == "y" || strings.ToLower(input) == "yes" {
+		if err := clearEntries(conn); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("All entries have been deleted.")
+	} else {
+		fmt.Println("Deletion of entries cancelled.")
 	}
 }
