@@ -103,7 +103,6 @@ func handleCommand(input string, inputChan chan string, conn *pgx.Conn) bool {
 	return true
 }
 
-// TODO: implement cancellation so that when a user does not want to save their entry they cancel writing it
 func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 	fmt.Println("--- NEW ENTRY ---")
 	fmt.Println("# press Enter twice when done")
@@ -134,8 +133,19 @@ func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 	}
 }
 
-// TODO: message where if there are no existing entries the user is told that before they start inputting IDs
 func displayEntry(inputChan chan string, conn *pgx.Conn) {
+
+	entries, err := loadEntries(conn)
+	if err != nil {
+		fmt.Println("Error loading entries:", err)
+		return
+	}
+
+	if len(entries) == 0 {
+		fmt.Println("There are no entries to view!")
+		return
+	}
+
 	fmt.Println("Enter the ID of the entry you want to read:")
 
 	input := <-inputChan
