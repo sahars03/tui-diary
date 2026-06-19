@@ -106,22 +106,29 @@ func handleCommand(input string, inputChan chan string, conn *pgx.Conn) bool {
 // TODO: implement cancellation so that when a user does not want to save their entry they cancel writing it
 func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 	fmt.Println("--- NEW ENTRY ---")
-	fmt.Println("Write your entry (press Enter twice when done):")
+	fmt.Println("# press Enter twice when done")
+	fmt.Println("# type :cancel and press Enter to discard the entry")
+	fmt.Println("Write your entry below:")
 
 	var lines []string
 	for input := range inputChan {
+		if input == ":cancel" {
+			fmt.Println("Entry cancelled.")
+			return
+		}
 		if input == "" && len(lines) > 0 {
 			break
 		}
 		lines = append(lines, input)
 	}
 
-	if len(lines) == 0 {
+	contents := strings.TrimSpace(strings.Join(lines, "\n"))
+	if contents == "" {
 		fmt.Println("(empty entry discarded)")
 		return
 	}
 
-	if err := saveEntry(conn, strings.Join(lines, "\n")); err != nil {
+	if err := saveEntry(conn, contents); err != nil {
 		fmt.Println("Error saving entry:", err)
 		return
 	}
