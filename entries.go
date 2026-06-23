@@ -89,7 +89,7 @@ func listEntries(conn *pgx.Conn) {
 	}
 
 	if len(entries) == 0 {
-		fmt.Println("No entries yet!")
+		fmt.Println("No entries yet.")
 		return
 	}
 
@@ -98,7 +98,11 @@ func listEntries(conn *pgx.Conn) {
 		if len(preview) > 100 {
 			preview = preview[:100] + "..."
 		}
-		fmt.Printf("#%d  %s\n%s\n\n", e.ID, e.Date.Format("2 Jan 2006 15:04"), preview)
+		header := idStyle.Render(fmt.Sprintf("#%d", e.ID)) + "  " +
+			dateStyle.Render(e.Date.Format("2 Jan 2006 15:04"))
+		fmt.Println(header)
+		fmt.Println(preview)
+		fmt.Println()
 	}
 }
 

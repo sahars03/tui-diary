@@ -12,6 +12,32 @@ import (
 	"strconv"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/common-nighthawk/go-figure"
+)
+
+var (
+	titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#e49b5b")).
+			Padding(0, 1)
+
+	boxStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#1a8726")).
+			Padding(1, 2)
+
+	idStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("212"))
+
+	dateStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("245")).
+			Italic(true)
+
+	commandStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#d8db7f"))
 )
 
 func main() {
@@ -20,10 +46,11 @@ func main() {
         fmt.Println("Warning: no .env file found")
     }
 
-	fmt.Println(" ###### TUI DIARY ###### ")
-	fmt.Println("Welcome!")
+	figure.NewFigure("TUI DIARY", "", true).Print()
+	fmt.Println()
+	fmt.Println(titleStyle.Render("                          Welcome!"))
 	printHelp()
-
+	
 	conn, err := connect()
 	if err != nil {
 		fmt.Println("Error connecting to database:", err)
@@ -72,17 +99,16 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Println("########################################################")
-	fmt.Println("# Commands:")
-	fmt.Println("#  [n]ew - write a new entry")
-	fmt.Println("#  [a]ll - list all of the entries you have made")
-	fmt.Println("#  [v]iew - take a look at a specific entry")
-	fmt.Println("#  [d]elete - delete a specific entry")	
-	fmt.Println("#  [c]lear - delete all of your entries")	
-	fmt.Println("#  [q]uit - leave the application")	
-	fmt.Println("#")
-	fmt.Println("# Enter [h]elp to make these instructions reappear!    #")
-	fmt.Println("########################################################")
+	help := lipgloss.NewStyle().Bold(true).Render("Commands:") + "\n" +
+		"  " + commandStyle.Render("[n]ew") + "    write a new entry\n" +
+		"  " + commandStyle.Render("[a]ll") + "    list all of the entries you have made\n" +
+		"  " + commandStyle.Render("[v]iew") + "   take a look at a specific entry\n" +
+		"  " + commandStyle.Render("[d]elete") + " delete a specific entry\n" +
+		"  " + commandStyle.Render("[c]lear") + "  delete all of your entries\n" +
+		"  " + commandStyle.Render("[q]uit") + "   leave the application\n\n" +
+		"Enter " + commandStyle.Render("[h]elp") + " to make these instructions reappear!"
+
+	fmt.Println(boxStyle.Render(help))
 }
 
 func handleCommand(input string, inputChan chan string, conn *pgx.Conn) bool {
