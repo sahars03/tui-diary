@@ -48,6 +48,10 @@ func main() {
 		for scanner.Scan() {
 			inputChan <- strings.TrimSpace(scanner.Text())
 		}
+		if err := scanner.Err(); err != nil {
+			fmt.Println("Error reading input:", err)
+		}
+		close(inputChan)
 	}()
 
 	fmt.Print("> ")

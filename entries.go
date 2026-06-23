@@ -73,7 +73,7 @@ func loadOneEntry(conn *pgx.Conn, id int) (Entry, error) {
 
 	entry, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Entry])
 	if err == pgx.ErrNoRows {
-		return Entry{}, fmt.Errorf("no entry found with id #%d", id)
+		return Entry{}, fmt.Errorf("No entry found with id #%d.", id)
 	}
 	if err != nil {
 		return Entry{}, err
