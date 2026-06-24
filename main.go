@@ -14,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/common-nighthawk/go-figure"
+
 )
 
 var (
@@ -38,6 +39,7 @@ var (
 	commandStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("#d8db7f"))
+
 )
 
 func main() {

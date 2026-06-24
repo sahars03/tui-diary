@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 	"github.com/jackc/pgx/v5"
+	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 )
 
 type Entry struct {
@@ -81,6 +83,17 @@ func loadOneEntry(conn *pgx.Conn, id int) (Entry, error) {
 	return entry, nil
 }
 
+func getBoxWidth() int {
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || width <= 0 {
+		return 76 // fallback if size can't be detected (e.g. piped output)
+	}
+	if width > 100 {
+		width = 100 // optional cap so boxes don't get absurdly wide on huge terminals
+	}
+	return width - 4 // leave room for border + padding
+}
+
 func listEntries(conn *pgx.Conn) {
 	entries, err := loadEntries(conn)
 	if err != nil {
@@ -93,6 +106,12 @@ func listEntries(conn *pgx.Conn) {
 		return
 	}
 
+	entryBoxStyle := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#6f1640")).
+			Padding(1, 2).
+			Width(60)
+
 	for _, e := range entries {
 		preview := e.Contents
 		if len(preview) > 100 {
@@ -100,8 +119,10 @@ func listEntries(conn *pgx.Conn) {
 		}
 		header := idStyle.Render(fmt.Sprintf("#%d", e.ID)) + "  " +
 			dateStyle.Render(e.Date.Format("2 Jan 2006 15:04"))
-		fmt.Println(header)
-		fmt.Println(preview)
+
+		content := header + "\n\n" + preview
+
+		fmt.Println(entryBoxStyle.Render(content))
 		fmt.Println()
 	}
 }
