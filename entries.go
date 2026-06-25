@@ -86,7 +86,7 @@ func loadOneEntry(conn *pgx.Conn, id int) (Entry, error) {
 func getBoxWidth() int {
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil || width <= 0 {
-		return 76 // fallback if size can't be detected (e.g. piped output)
+		return 40 // fallback if size can't be detected (e.g. piped output)
 	}
 	if width > 100 {
 		width = 100 // optional cap so boxes don't get absurdly wide on huge terminals
@@ -145,8 +145,9 @@ func deleteOneEntry(conn *pgx.Conn, id int) error {
 }
 
 func clearEntries(conn *pgx.Conn) error {
+	// clears entries and also restarts serial count for entry IDs
 	_, err := conn.Exec(context.Background(),
-		`DELETE FROM entries`,
+		`TRUNCATE TABLE entries RESTART IDENTITY`,
 	)
 	return err
 }

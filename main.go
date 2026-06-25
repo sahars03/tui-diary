@@ -40,6 +40,10 @@ var (
 			Bold(true).
 			Foreground(lipgloss.Color("#d8db7f"))
 
+	promptStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#f9c1c1")).
+		Bold(true)
+
 )
 
 func main() {
@@ -166,19 +170,7 @@ func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 }
 
 func displayEntry(inputChan chan string, conn *pgx.Conn) {
-
-	entries, err := loadEntries(conn)
-	if err != nil {
-		fmt.Println("Error loading entries:", err)
-		return
-	}
-
-	if len(entries) == 0 {
-		fmt.Println("There are no entries to view!")
-		return
-	}
-
-	fmt.Println("Enter the ID of the entry you want to read:")
+	fmt.Println(promptStyle.Render("Enter the ") + idStyle.Render("ID ") + promptStyle.Render("of the entry you want to read:"))
 
 	input := <-inputChan
 
@@ -194,9 +186,18 @@ func displayEntry(inputChan chan string, conn *pgx.Conn) {
 		return
 	}
 
-	fmt.Printf("--- Entry #%d | %s ---\n", entry.ID, entry.Date.Format("2 Jan 2006 15:04"))
-	fmt.Println(entry.Contents)
-	fmt.Println("---")
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("63")).
+		Padding(1, 2).
+		Width(getBoxWidth())
+
+	header := idStyle.Render(fmt.Sprintf("#%d", entry.ID)) + "  " +
+		dateStyle.Render(entry.Date.Format("2 Jan 2006 15:04"))
+
+	content := header + "\n\n" + entry.Contents
+
+	fmt.Println(boxStyle.Render(content))
 }
 
 func deleteEntry(inputChan chan string, conn *pgx.Conn) {
