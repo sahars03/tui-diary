@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
+	"github.com/charmbracelet/lipgloss/table"
 )
 
 type Entry struct {
@@ -106,25 +107,47 @@ func listEntries(conn *pgx.Conn) {
 		return
 	}
 
-	entryBoxStyle := lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#6f1640")).
-			Padding(1, 2).
-			Width(60)
+	headerStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#cdf1fa")).
+		Bold(true).
+		Padding(0, 1)
 
+	evenRowStyle := lipgloss.NewStyle().Padding(1, 1)
+
+	oddRowStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("250")).
+		Padding(1, 1)
+
+	var rows [][]string
 	for _, e := range entries {
 		preview := e.Contents
-		if len(preview) > 100 {
-			preview = preview[:100] + "..."
+		if len(preview) > 60 {
+			preview = preview[:60] + "..."
 		}
-		header := idStyle.Render(fmt.Sprintf("#%d", e.ID)) + "  " +
-			dateStyle.Render(e.Date.Format("2 Jan 2006 15:04"))
-
-		content := header + "\n\n" + preview
-
-		fmt.Println(entryBoxStyle.Render(content))
-		fmt.Println()
+		rows = append(rows, []string{
+			fmt.Sprintf("#%d", e.ID),
+			e.Date.Format("2 Jan 2006 15:04"),
+			preview,
+		})
 	}
+
+	t := table.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#446971"))).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			switch {
+			case row == table.HeaderRow:
+				return headerStyle
+			case row%2 == 0:
+				return evenRowStyle
+			default:
+				return oddRowStyle
+			}
+		}).
+		Headers("ID", "Date", "Preview").
+		Rows(rows...)
+
+	fmt.Println(t)
 }
 
 func deleteOneEntry(conn *pgx.Conn, id int) error {

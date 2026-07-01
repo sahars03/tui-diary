@@ -170,7 +170,7 @@ func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 }
 
 func displayEntry(inputChan chan string, conn *pgx.Conn) {
-	fmt.Println(promptStyle.Render("Enter the ") + idStyle.Render("ID ") + promptStyle.Render("of the entry you want to read:"))
+	fmt.Print(promptStyle.Render("Enter the ") + idStyle.Render("ID ") + promptStyle.Render("of the entry you want to read: "))
 
 	input := <-inputChan
 
@@ -187,10 +187,10 @@ func displayEntry(inputChan chan string, conn *pgx.Conn) {
 	}
 
 	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("63")).
-		Padding(1, 2).
-		Width(getBoxWidth())
+    BorderLeft(true).
+    BorderStyle(lipgloss.ThickBorder()).
+    BorderForeground(lipgloss.Color("212")).
+    PaddingLeft(2)
 
 	header := idStyle.Render(fmt.Sprintf("#%d", entry.ID)) + "  " +
 		dateStyle.Render(entry.Date.Format("2 Jan 2006 15:04"))
