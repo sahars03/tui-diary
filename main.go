@@ -44,6 +44,18 @@ var (
 		Foreground(lipgloss.Color("#f9c1c1")).
 		Bold(true)
 
+	entryStyle = lipgloss.NewStyle().
+		BorderLeft(true).
+		BorderStyle(lipgloss.ThickBorder()).
+		BorderForeground(lipgloss.Color("212")).
+		PaddingLeft(2)
+
+	entryTextStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#c679e4"))
+
+	cancelStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#fa3f3f"))
 )
 
 func main() {
@@ -140,15 +152,20 @@ func handleCommand(input string, inputChan chan string, conn *pgx.Conn) bool {
 }
 
 func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
-	fmt.Println("--- NEW ENTRY ---")
-	fmt.Println("# press Enter twice when done")
-	fmt.Println("# type :cancel and press Enter to discard the entry")
-	fmt.Println("Write your entry below:")
+
+	one := entryTextStyle.Render("NEW ENTRY")
+	two := "   press " + commandStyle.Render("Enter ") + lipgloss.NewStyle().Underline(true).Render("twice") + " when done"
+	three := "   type " + commandStyle.Render(":cancel") + " and press " + commandStyle.Render("Enter") + " to discard the entry"
+	four := entryTextStyle.Render("Write your entry below:")
+
+	content := one + "\n" + two + "\n" + three + "\n" + four
+
+	fmt.Println(entryStyle.Render(content))
 
 	var lines []string
 	for input := range inputChan {
 		if input == ":cancel" {
-			fmt.Println("Entry cancelled.")
+			fmt.Println(cancelStyle.Render("Entry cancelled."))
 			return
 		}
 		if input == "" && len(lines) > 0 {
@@ -158,8 +175,9 @@ func writeNewEntry(inputChan chan string, conn *pgx.Conn) {
 	}
 
 	contents := strings.TrimSpace(strings.Join(lines, "\n"))
+
 	if contents == "" {
-		fmt.Println("(empty entry discarded)")
+		fmt.Println(cancelStyle.Render("Empty entry discarded."))
 		return
 	}
 
@@ -186,18 +204,12 @@ func displayEntry(inputChan chan string, conn *pgx.Conn) {
 		return
 	}
 
-	boxStyle := lipgloss.NewStyle().
-    BorderLeft(true).
-    BorderStyle(lipgloss.ThickBorder()).
-    BorderForeground(lipgloss.Color("212")).
-    PaddingLeft(2)
-
 	header := idStyle.Render(fmt.Sprintf("#%d", entry.ID)) + "  " +
 		dateStyle.Render(entry.Date.Format("2 Jan 2006 15:04"))
 
 	content := header + "\n\n" + entry.Contents
 
-	fmt.Println(boxStyle.Render(content))
+	fmt.Println(entryStyle.Render(content))
 }
 
 func deleteEntry(inputChan chan string, conn *pgx.Conn) {

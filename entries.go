@@ -48,7 +48,7 @@ func saveEntry(conn *pgx.Conn, contents string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Entry saved as #%d!\n", id)
+	fmt.Println(entryTextStyle.Render("Entry saved as ") + idStyle.Render(fmt.Sprintf("#%d", id)) + entryTextStyle.Render("!"))
 	return nil
 }
 
