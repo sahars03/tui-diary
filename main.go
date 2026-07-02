@@ -56,6 +56,10 @@ var (
 
 	cancelStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#fa3f3f"))
+
+	warningStyle = lipgloss.NewStyle().
+			Italic(true).
+			Foreground(lipgloss.Color("#fe9696"))
 )
 
 func main() {
@@ -213,13 +217,13 @@ func displayEntry(inputChan chan string, conn *pgx.Conn) {
 }
 
 func deleteEntry(inputChan chan string, conn *pgx.Conn) {
-	fmt.Println("Enter the ID of the entry you want to delete:")
+	fmt.Print(promptStyle.Render("Enter the ") + idStyle.Render("ID ") + promptStyle.Render("of the entry you want to delete: "))
 
 	input := <-inputChan
 
 	id, err := strconv.Atoi(input)
 	if err != nil {
-		fmt.Println("Invalid ID — please enter a number. Type [d]elete to try again.")
+			fmt.Println(cancelStyle.Render("Invalid ID — please enter a number. Type [d]elete to try again."))
 		return
 	}
 
@@ -229,12 +233,19 @@ func deleteEntry(inputChan chan string, conn *pgx.Conn) {
 		return
 	}
 
-	fmt.Println("This is the entry you wish to delete:")
-	fmt.Printf("--- Entry #%d | %s ---\n", entry.ID, entry.Date.Format("2 Jan 2006 15:04"))
-	fmt.Println(entry.Contents)
-	fmt.Println("---")	
+	fmt.Println(promptStyle.UnsetBold().Foreground(lipgloss.Color("#fe9696")).Render("This is the entry you wish to delete:\n"))
+	// fmt.Printf("--- Entry #%d | %s ---\n", entry.ID, entry.Date.Format("2 Jan 2006 15:04"))
+	// fmt.Println(entry.Contents)
+	// fmt.Println("---")	
 
-	fmt.Println("Are you sure you want to delete this entry? Type [y]es to delete and anything else to cancel")
+	header := idStyle.Render(fmt.Sprintf("#%d", entry.ID)) + "  " +
+		dateStyle.Render(entry.Date.Format("2 Jan 2006 15:04"))
+
+	content := header + "\n\n" + entry.Contents
+
+	fmt.Println(entryStyle.Render(content))
+
+	fmt.Print(warningStyle.Render("\nAre you sure you want to delete this entry? Type ") + commandStyle.Italic(true).Render("[y]es") + warningStyle.Render(" to delete it and anything else to cancel: "))
 
 	input = <-inputChan
 	
@@ -244,7 +255,7 @@ func deleteEntry(inputChan chan string, conn *pgx.Conn) {
 			return
 		}
 	} else {
-		fmt.Println("Entry deletion cancelled.")
+		fmt.Println(cancelStyle.Render("Entry deletion cancelled."))
 	}
 }
 

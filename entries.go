@@ -163,7 +163,7 @@ func deleteOneEntry(conn *pgx.Conn, id int) error {
 		return fmt.Errorf("no entry found with id #%d", id)
 	}
 
-	fmt.Printf("Entry #%d has been deleted!\n", id)
+	fmt.Println(promptStyle.Render("Entry ") + idStyle.Render(fmt.Sprintf("#%d", id)) + promptStyle.Render(" has been deleted!"))
 	return nil
 }
 
